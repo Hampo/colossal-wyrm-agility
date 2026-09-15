@@ -19,6 +19,7 @@ public enum Obstacle {
     EDGE("Edge", new WorldPoint(1647, 2907, 2), new WorldPoint(1635, 2907, 2), 10),
     ADVANCED_TIGHTROPE("Advanced Tightrope", new WorldPoint(1633, 2908, 2), new WorldPoint(1624, 2931, 2), 55),
     ADVANCED_TIGHTROPE2("Advanced Tightrope", new WorldPoint(1634, 2908, 2), new WorldPoint(1624, 2931, 2), 56),
+    ADVANCED_TIGHTROPE3("Advanced Tightrope", new WorldPoint(1633, 2907, 2), new WorldPoint(1624, 2931, 2), 56),
     ZIPLINE("Zipline", new WorldPoint(1625, 2933, 2), new WorldPoint(1645, 2933, 0), 13);
 
     private final String name;
