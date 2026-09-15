@@ -41,13 +41,14 @@ public class ColossalWyrmAgilityPanel extends OverlayPanel {
                 .build());
 
         var ticks = client.getTickCount() - startTick - 1;
+        var ticksLeft = obstacle.getTicks() - ticks;
 
         var progressBar = new ProgressBarComponent();
         progressBar.setMinimum(0);
         progressBar.setMaximum(obstacle.getTicks());
         progressBar.setValue(Math.min(ticks, obstacle.getTicks()));
         progressBar.setLabelDisplayMode(ProgressBarComponent.LabelDisplayMode.TEXT_ONLY);
-        progressBar.setCenterLabel(obstacle.getTicks() - ticks + " ticks");
+        progressBar.setCenterLabel(ticksLeft + " tick" + (ticksLeft == 1 ? "" : "s"));
         panelComponent.getChildren().add(progressBar);
 
         return super.render(graphics);
