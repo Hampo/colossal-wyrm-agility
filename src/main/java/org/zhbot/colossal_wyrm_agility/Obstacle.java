@@ -34,7 +34,6 @@ public enum Obstacle {
         this.ticks = ticks;
     }
 
-    private static final Map<WorldPoint, Obstacle> POINT_MAP = new HashMap<>();
     private static final Map<WorldPoint, Obstacle> START_POINT_MAP = new HashMap<>();
     private static final Map<WorldPoint, Obstacle> END_POINT_MAP = new HashMap<>();
 
@@ -42,18 +41,10 @@ public enum Obstacle {
     {
         for (var obstacle : values())
         {
-            POINT_MAP.put(obstacle.getStartPoint(), obstacle);
-            POINT_MAP.put(obstacle.getEndPoint(), obstacle);
-
             START_POINT_MAP.put(obstacle.getStartPoint(), obstacle);
 
             END_POINT_MAP.put(obstacle.getEndPoint(), obstacle);
         }
-    }
-
-    public static Obstacle getByPoint(WorldPoint point)
-    {
-        return POINT_MAP.get(point);
     }
 
     public static Obstacle getByStartPoint(WorldPoint point)
