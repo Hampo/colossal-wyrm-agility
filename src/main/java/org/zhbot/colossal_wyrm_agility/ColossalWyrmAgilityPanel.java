@@ -1,6 +1,5 @@
 package org.zhbot.colossal_wyrm_agility;
 
-import lombok.Setter;
 import net.runelite.api.Client;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
