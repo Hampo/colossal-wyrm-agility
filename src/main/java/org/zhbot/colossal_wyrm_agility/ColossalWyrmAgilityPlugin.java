@@ -136,14 +136,14 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 
 		if (event.getValue() == 0)
 		{
+			panel.setObstacle(null);
+
 			var obstacle = Obstacle.getByEndPoint(location);
 			if (obstacle == null)
 				return;
 
 			if (config.obstacleMinimumTicks() < obstacle.getTicks())
 				notifier.notify(config.obstacleCompleteNotifications(), "Obstacle \"" + obstacle.getName() + "\" complete");
-
-			panel.setObstacle(null);
 		}
 		else
 		{
