@@ -5,14 +5,17 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.coords.WorldArea;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 import java.util.Set;
 
@@ -39,25 +42,6 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 	private static final String LAP_DURATION_MESSAGE = "Lap duration: ";
 	private static final String TERMITES_MESSAGE = "You managed to scoop up ";
 	private static final String BONE_SHARDS_MESSAGE = "You also find";
-	private static final Set<WorldPoint> OBSTACLE_COMPLETE_POINTS = ImmutableSet.of(
-			// Start
-			new WorldPoint(1653, 2931, 1),
-			new WorldPoint(1649, 2910, 1),
-
-			// Beginner
-			new WorldPoint(1635, 2910, 1),
-			new WorldPoint(1635, 2910, 1),
-			new WorldPoint(1627, 2931, 1),
-			new WorldPoint(1625, 2932, 2),
-
-			// Advanced
-			new WorldPoint(1648, 2908, 2),
-			new WorldPoint(1635, 2907, 2),
-			new WorldPoint(1624, 2931, 2),
-			new WorldPoint(1645, 2933, 0)
-	);
-	private static final int IDLE_POSE_ANIMATION_ID = 808;
-	private static final WorldPoint BASIC_TIGHTROPE_END_POINT = new WorldPoint(1635, 2910, 1);
 
 	@Inject
 	private Client client;
@@ -66,24 +50,30 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 	private Notifier notifier;
 
 	@Inject
+	private OverlayManager overlayManager;
+
+	@Inject
 	private ColossalWyrmAgilityConfig config;
 
 	@Inject
 	private TextUtils textUtils;
 
+	@Inject
+	private ColossalWyrmAgilityPanel panel;
+
 	private boolean inColossalWyrmRemainsArea = false;
-	private int lastPoseAnimation = -1;
+	private boolean justLoggedIn = false;
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		log.debug("Example started!");
+		updateConfig();
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		log.debug("Example stopped!");
+		overlayManager.remove(panel);
 	}
 
 	@Subscribe
@@ -97,15 +87,72 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 		}
 
 		inColossalWyrmRemainsArea = COLOSSAL_WYRM_REMAINS_AREA.contains2D(player.getWorldLocation());
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (event.getGroup().equals(ColossalWyrmAgilityConfig.group))
+			updateConfig();
+	}
+
+	private void updateConfig()
+	{
+		if (config.overlayPanelEnabled())
+			overlayManager.add(panel);
+		else
+			overlayManager.remove(panel);
+	}
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		if (event.getGameState() == GameState.LOGGED_IN)
+			justLoggedIn = true;
+	}
+
+	@Subscribe
+	public void onVarbitChanged(VarbitChanged event)
+	{
 		if (!inColossalWyrmRemainsArea)
 			return;
 
-		var poseAnimation = player.getPoseAnimation();
-		if (poseAnimation != lastPoseAnimation)
+		if (event.getVarbitId() != VarbitID.BUSY)
+			return;
+
+		if (justLoggedIn)
 		{
-			lastPoseAnimation = poseAnimation;
-			if (poseAnimation == IDLE_POSE_ANIMATION_ID && player.getWorldLocation().distanceTo(BASIC_TIGHTROPE_END_POINT) == 0)
-				notifier.notify(config.obstacleCompleteNotifications(), "Obstacle complete");
+			justLoggedIn = false;
+			return;
+		}
+
+		var player = client.getLocalPlayer();
+		if (player == null)
+			return;
+
+		var location = player.getWorldLocation();
+		if (location == null)
+			return;
+
+		if (event.getValue() == 0)
+		{
+			var obstacle = Obstacle.getByEndPoint(location);
+			if (obstacle == null)
+				return;
+
+			if (config.obstacleMinimumTicks() < obstacle.getTicks())
+				notifier.notify(config.obstacleCompleteNotifications(), "Obstacle \"" + obstacle.getName() + "\" complete");
+
+			panel.setObstacle(null);
+		}
+		else
+		{
+			var obstacle = Obstacle.getByStartPoint(location);
+			if (obstacle == null)
+				return;
+
+			if (obstacle.getTicks() > 1)
+				panel.setObstacle(obstacle, client.getTickCount());
 		}
 	}
 
@@ -167,35 +214,6 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 
 		lineBuffer.removeMessageNode(event.getMessageNode());
 		client.refreshChat();
-	}
-
-	@Subscribe
-	public void onAnimationChanged(AnimationChanged event)
-	{
-		if (!inColossalWyrmRemainsArea)
-			return;
-
-		if (!config.obstacleCompleteNotifications().isEnabled())
-			return;
-
-		var player = client.getLocalPlayer();
-		if (player == null)
-			return;
-
-		if (event.getActor() != player)
-			return;
-
-		if (player.getAnimation() != -1)
-			return;
-
-		var location = player.getWorldLocation();
-		if (location == null)
-			return;
-
-		if (!OBSTACLE_COMPLETE_POINTS.contains(location))
-			return;
-
-		notifier.notify(config.obstacleCompleteNotifications(), "Obstacle complete");
 	}
 
 	@Provides
