@@ -152,7 +152,7 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 				return;
 
 			if (obstacle.getTicks() > 1)
-				panel.setObstacle(obstacle, client.getTickCount());
+				panel.setObstacle(obstacle);
 		}
 	}
 

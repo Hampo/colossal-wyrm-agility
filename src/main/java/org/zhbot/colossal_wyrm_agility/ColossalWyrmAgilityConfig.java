@@ -69,6 +69,18 @@ public interface ColossalWyrmAgilityConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+			keyName = "overlayPanelMode",
+			name = "Duration Format",
+			description = "What format to show an obstacle's duration",
+			section = overlayPanelSection,
+			position = 1
+	)
+	default DurationMode overlayPanelMode()
+	{
+		return DurationMode.TICKS;
+	}
+
 	@ConfigSection(
 			name = "Chat messages",
 			description = "Configure chat messages",
