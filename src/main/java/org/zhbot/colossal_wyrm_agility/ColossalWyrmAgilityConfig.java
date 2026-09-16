@@ -101,6 +101,18 @@ public interface ColossalWyrmAgilityConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "hideChatMessagesOverhead",
+			name = "Hide Overhead",
+			description = "Hide the forced chat messages overhead",
+			section = chatMessagesSection,
+			position = 0
+	)
+	default boolean hideChatMessagesOverhead()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "hideLapCount",
 			name = "Hide Lap Count",
 			description = "Hide the completed lap count message",

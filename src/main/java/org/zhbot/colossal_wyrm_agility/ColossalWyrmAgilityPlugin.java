@@ -216,6 +216,21 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 		client.refreshChat();
 	}
 
+	@Subscribe
+	public void onOverheadTextChanged(OverheadTextChanged event)
+	{
+		if (!inColossalWyrmRemainsArea)
+			return;
+
+		if (!config.hideChatMessagesOverhead())
+			return;
+
+		if (!CHAT_MESSAGES.contains(event.getOverheadText()))
+			return;
+
+		event.getActor().setOverheadText(null);
+	}
+
 	@Provides
 	ColossalWyrmAgilityConfig provideConfig(ConfigManager configManager)
 	{
