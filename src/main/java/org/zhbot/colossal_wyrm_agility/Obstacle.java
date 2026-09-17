@@ -1,5 +1,6 @@
 package org.zhbot.colossal_wyrm_agility;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import net.runelite.api.coords.WorldPoint;
 
@@ -31,7 +32,7 @@ public enum Obstacle {
         this.name = name;
         this.ticks = ticks;
         this.endPoint = endPoint;
-        this.startPoints = Set.of(startPoints);
+        this.startPoints = ImmutableSet.copyOf(startPoints);
     }
 
     private static final Map<WorldPoint, Obstacle> START_POINT_MAP = new HashMap<>();
