@@ -2,6 +2,9 @@ package org.zhbot.colossal_wyrm_agility;
 
 import net.runelite.client.config.*;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 @ConfigGroup(ColossalWyrmAgilityConfig.group)
 public interface ColossalWyrmAgilityConfig extends Config
 {
@@ -27,15 +30,17 @@ public interface ColossalWyrmAgilityConfig extends Config
 	}
 
 	@ConfigItem(
-			keyName = "obstacleMinimumTicks",
-			name = "Minimum Ticks",
-			description = "Minimum ticks an obstacle must take to trigger a notification. 0 for all obstacles.",
+			keyName = "enabledObstacles",
+			name = "Enabled",
+			description = "Which obstacles to give a notification for.",
 			section = notificationsSection,
 			position = 1
 	)
-	default int obstacleMinimumTicks()
+	default Set<Obstacle> enabledObstacles()
 	{
-		return 1;
+		var values = EnumSet.allOf(Obstacle.class);
+		values.removeIf(x -> x.getTicks() == 1);
+		return values;
 	}
 
 	@ConfigSection(

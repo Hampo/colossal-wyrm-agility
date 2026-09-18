@@ -1,6 +1,7 @@
 package org.zhbot.colossal_wyrm_agility;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.gson.Gson;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 @Slf4j
@@ -53,6 +55,12 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 	private OverlayManager overlayManager;
 
 	@Inject
+	private ConfigManager configManager;
+
+	@Inject
+	private Gson gson;
+
+	@Inject
 	private ColossalWyrmAgilityConfig config;
 
 	@Inject
@@ -67,6 +75,7 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+		migrateConfig();
 		updateConfig();
 	}
 
@@ -142,7 +151,7 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 			if (obstacle == null)
 				return;
 
-			if (config.obstacleMinimumTicks() < obstacle.getTicks())
+			if (config.enabledObstacles().contains(obstacle))
 				notifier.notify(config.obstacleCompleteNotifications(), "Obstacle \"" + obstacle.getName() + "\" complete");
 		}
 		else
@@ -235,5 +244,25 @@ public class ColossalWyrmAgilityPlugin extends Plugin
 	ColossalWyrmAgilityConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(ColossalWyrmAgilityConfig.class);
+	}
+
+	private void migrateConfig()
+	{
+		var obstacleMinimumTicks = configManager.getConfiguration(ColossalWyrmAgilityConfig.group, "obstacleMinimumTicks");
+		if (obstacleMinimumTicks != null)
+		{
+			log.debug("Migrating \"obstacleMinimumTicks\". Old value: {}", obstacleMinimumTicks);
+
+			var minimumTicks = Integer.parseInt(obstacleMinimumTicks);
+			var obstacles = EnumSet.allOf(Obstacle.class);
+			obstacles.removeIf(x -> x.getTicks() < minimumTicks);
+
+			var enabledObstacles = gson.toJson(obstacles);
+			configManager.setConfiguration(ColossalWyrmAgilityConfig.group, "enabledObstacles", enabledObstacles);
+			log.debug("Migrated to \"enabledObstacles\". New value: {}", enabledObstacles);
+
+			configManager.unsetConfiguration(ColossalWyrmAgilityConfig.group, "obstacleMinimumTicks");
+			configManager.sendConfig();
+		}
 	}
 }
